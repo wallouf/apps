@@ -1,4 +1,7 @@
 window._config = {
+	googleAPI: {
+		apiKey: 'AIzaSyBX9FYZTFAnM3Qg1V5Ws0SOq_yE73k_zwY'
+	},
     cognito: {
         userPoolId: 'eu-west-2_UUlczaIQ3', // e.g. us-east-2_uXboG5pAb
         userPoolClientId: '2op0l5tbg629squ0o9p9o6rt8h', // e.g. 25ddkmj4v6hfsfvruhpfi7n4hv
