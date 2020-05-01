@@ -1,0 +1,97 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <!-- Required meta tags -->
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
+
+    <!-- Bootstrap CSS -->
+    <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.4.1/css/bootstrap.min.css" integrity="sha384-Vkoo8x4CGsO3+Hhxv8T/Q5PaXtkKtu6ug5TOeNV6gBiFeWPGFN9MuhOf23Q9Ifjh" crossorigin="anonymous">
+    
+    <script src="https://code.jquery.com/jquery-3.4.1.min.js" integrity="sha256-CSXorXvZcTkaix6Yvo6HppcZGetbYMGWSFlBw8HfCJo=" crossorigin="anonymous"></script>
+    <script src="https://cdn.jsdelivr.net/npm/popper.js@1.16.0/dist/umd/popper.min.js" integrity="sha384-Q6E9RHvbIyZFJoft+2mJbHaEWldlvI9IOYy5n3zV9zzTtmI3UksdQRVvoxMfooAo" crossorigin="anonymous"></script>
+    <script src="https://stackpath.bootstrapcdn.com/bootstrap/4.4.1/js/bootstrap.min.js" integrity="sha384-wfSDF2E50Y2D1uUdj0O3uMBJnjuUD4Ih7YwaYd1iqfktj0Uod8GCExl3Og8ifwB6" crossorigin="anonymous"></script>
+
+    <script src="js/aws-cognito-sdk.min.js"></script>
+    <script src="js/amazon-cognito-identity.min.js"></script>
+
+
+    <script src="https://maps.googleapis.com/maps/api/js?sensor=false&amp;libraries=places&amp;key="></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/0.4.1/html2canvas.min.js" integrity="sha256-c3RzsUWg+y2XljunEQS0LqWdQ04X1D3j22fd/8JCAKw=" crossorigin="anonymous"></script>
+
+    <script src="js/config.js"></script>
+    <script src="js/cognito-auth.js"></script>
+    <script src="js/covid-locator.js"></script>
+
+
+    <title>Wallouf Apps - Covid locator</title>
+  </head>
+  <body>
+    <header>
+      <nav class="navbar navbar-expand-md navbar-dark fixed-top bg-dark">
+        <a class="navbar-brand" href="index.html">Wallouf Apps</a>
+        <button class="navbar-toggler" type="button" data-toggle="collapse" data-target="#navbarCollapse" aria-controls="navbarCollapse" aria-expanded="false" aria-label="Toggle navigation">
+          <span class="navbar-toggler-icon"></span>
+        </button>
+        <div class="collapse navbar-collapse" id="navbarCollapse">
+          <ul class="navbar-nav mr-auto">
+            <li class="nav-item">
+              <a class="nav-link" href="index.html">Home</a>
+            </li>
+            <li class="nav-item">
+              <a class="nav-link" href="sudoku.html">Sudoku Solver</a>
+            </li>
+            <li class="nav-item active">
+              <a class="nav-link" href="covid-locator.html">Covid locator</a>
+            </li>
+            <li class="nav-item">
+              <a class="nav-link" href="#">Travel Form Generator</a>
+            </li>
+          </ul>
+          <div class="my-2 my-lg-0">
+            <div class="mx-0 mx-sm-5 text-info" id="userEmailInfo"></div>
+          </div>
+          <div class="my-2 my-lg-0">
+            <button class="btn btn-outline-success" id="logoutBtn">Logout</button>
+          </div>
+        </div>
+      </nav>
+    </header>
+    <main role="main">
+      <a class="d-none" id="saveLocationImage" href="website.com/imageurl.png" download="ImageNameHere">click here</a>
+      <div class="pt-3  text-center mt-5">
+        <div class="container">
+          <h1 class="jumbotron-heading">Covid Locator</h1>
+          <p class="lead text-muted">Set your home address and view your available 100km trips !<br /><small>You can also use your actual location to view your position in the 100km range</small></p>
+
+          <div class="text-left">
+            <label for="locatorAddress">Home address</label>
+          </div>
+          <div class="text-left input-group mb-3">
+            <input type="text" class="form-control" id="locatorAddress" placeholder="Set your home address" aria-label="Address" aria-describedby="Address">
+            <div class="btn-group" role="group">
+              <button class="btn btn-primary" id="locatorBtn">View</button>
+              
+              <div class="btn-group dropleft" role="group">
+                <button class="btn btn-info dropdown-toggle" type="button" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
+                  Other
+                </button>
+                <div class="dropdown-menu" aria-labelledby="dropdownMenuButton">
+                  <button class="dropdown-item" id="myLocationBtn">My location</button>
+                  <button class="dropdown-item" id="saveLocationBtn">Save</button>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+      <div class="container">
+          <div id="addressAlerts" class="alert alert-danger d-none" role="alert"></div>
+          <div class="map-responsive">
+            <div style="width:100%;height: 500px;" id="locatorMaps"></div>
+          </div>
+      </div>
+    </main>
+
+  </body>
+</html>
