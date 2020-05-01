@@ -93,36 +93,42 @@ var payloadToken = {};
         });
     }
 
+    function displayLocation(position){
+
+        var positiobCircle = new google.maps.Circle({
+            strokeColor: '#0000FF',
+            strokeOpacity: 1,
+            strokeWeight: 2,
+            fillColor: '#0000FF',
+            fillOpacity: 0.35,
+            map: map,
+            center: position,
+            radius: 1000
+        });
+        map.setCenter(position);
+    }
+
     function initMyLocationBtn(){
         $("#myLocationBtn").click(function() {
-            // Try HTML5 geolocation.
-            if (navigator.geolocation) {
-                navigator.geolocation.getCurrentPosition(function(position) {
-                    var pos = {
-                        lat: position.coords.latitude,
-                        lng: position.coords.longitude
-                    };
 
+            $.getJSON("http://ip-api.com/json", function (data, status) {
+                if(status === "success") {
+                    if(data.lat && data.lon) {
+                        //if there's not zip code but we have a latitude and longitude, let's use them
+                        var pos = {
+                            lat: data.lat,
+                            lng: data.lon
+                        };
 
-                    var positiobCircle = new google.maps.Circle({
-                        strokeColor: '#0000FF',
-                        strokeOpacity: 1,
-                        strokeWeight: 2,
-                        fillColor: '#0000FF',
-                        fillOpacity: 0.35,
-                        map: map,
-                        center: pos,
-                        radius: 1000
-                    });
-                    map.setCenter(pos);
-
-                }, function() {
-                    handleLocationError(true);
-                });
-            } else {
-                // Browser doesn't support Geolocation
-                handleLocationError(false);
-            }
+                        displayLocation(pos);
+                    } else {
+                        //if there's an error 
+                        handleLocationError(true);
+                    }
+                } else {
+                    handleLocationError(false);
+                }
+            });
         });
     }
 
