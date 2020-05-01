@@ -7,8 +7,11 @@ SudokuSolver.map = SudokuSolver.map || {};
 var initLat = 48.852969;
 var initLon = 2.349903;
 var map = null;
+var positionCircle = null;
 
 var payloadToken = {};
+
+var addressFound = false;
 
 (function homeScopeWrapper($) {
     var authToken;
@@ -94,8 +97,11 @@ var payloadToken = {};
     }
 
     function displayLocation(position){
+        if(positionCircle != undefined){
+            positionCircle.setMap(null);
+        }
 
-        var positiobCircle = new google.maps.Circle({
+        positionCircle = new google.maps.Circle({
             strokeColor: '#0000FF',
             strokeOpacity: 1,
             strokeWeight: 2,
@@ -108,27 +114,58 @@ var payloadToken = {};
         map.setCenter(position);
     }
 
-    function initMyLocationBtn(){
+    function initMySimpleLocationBtn(){
         $("#myLocationBtn").click(function() {
 
-            $.getJSON("http://ip-api.com/json", function (data, status) {
-                if(status === "success") {
-                    if(data.lat && data.lon) {
-                        //if there's not zip code but we have a latitude and longitude, let's use them
+            if(addressFound == false){
+                displayAddressAlert("Trouvez d'abord votre adresse.");
+            }else{
+                $.getJSON("http://ip-api.com/json", function (data, status) {
+                    if(status === "success") {
+                        if(data.lat && data.lon) {
+                            //if there's not zip code but we have a latitude and longitude, let's use them
+                            var pos = {
+                                lat: data.lat,
+                                lng: data.lon
+                            };
+
+                            displayLocation(pos);
+                        } else {
+                            //if there's an error 
+                            handleLocationError(true);
+                        }
+                    } else {
+                        handleLocationError(false);
+                    }
+                });
+            }
+        });
+    }
+
+    function initMyGoogleLocationBtn(){
+        $("#myLocationBtn").click(function() {
+
+            if(addressFound == false){
+                displayAddressAlert("Trouvez d'abord votre adresse.");
+            }else{
+                // Try HTML5 geolocation.
+                if (navigator.geolocation) {
+                    navigator.geolocation.getCurrentPosition(function(position) {
                         var pos = {
-                            lat: data.lat,
-                            lng: data.lon
+                            lat: position.coords.latitude,
+                            lng: position.coords.longitude
                         };
 
                         displayLocation(pos);
-                    } else {
-                        //if there's an error 
+
+                    }, function() {
                         handleLocationError(true);
-                    }
+                    });
                 } else {
+                    // Browser doesn't support Geolocation
                     handleLocationError(false);
                 }
-            });
+            }
         });
     }
 
@@ -205,7 +242,7 @@ var payloadToken = {};
 
         initMap();
         autocompleteAddress();
-        initMyLocationBtn();
+        initMySimpleLocationBtn();
         initSaveBtn();
 
     });
