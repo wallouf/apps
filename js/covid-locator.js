@@ -86,12 +86,15 @@ var addressFound = false;
                     center: myLatLng,
                     radius: 100 * 1000
                 });
+                addressFound = true;
 
                 
             } else if(text == undefined || text.trim() == ""){
                 displayAddressAlert("Use the address input bar to search your home address.");
+                addressFound = false;
             } else {
                 displayAddressAlert("Use the autocomplete function to select valid address.");
+                addressFound = false;
             }
         });
     }
@@ -226,6 +229,7 @@ var addressFound = false;
 
     // Register click handler for #request button
     $(function onDocReady() {
+        addressFound = false;
 
         $('#logoutBtn').click(function() {
             SudokuSolver.signOut();
