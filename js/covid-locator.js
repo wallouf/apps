@@ -1,5 +1,3 @@
-/*global SudokuSolver _config*/
-
 var SudokuSolver = window.SudokuSolver || {};
 SudokuSolver.map = SudokuSolver.map || {};
 
@@ -7,11 +5,12 @@ SudokuSolver.map = SudokuSolver.map || {};
 var initLat = 48.852969;
 var initLon = 2.349903;
 var map = null;
+var locationMarker = null;
+var homeMarker = null;
+var homeCircle = null;
 var positionCircle = null;
 
 var payloadToken = {};
-
-var addressFound = false;
 
 (function homeScopeWrapper($) {
     var authToken;
@@ -26,16 +25,6 @@ var addressFound = false;
         window.location.href = 'login.html';
     });
 
-    function parseJwt (token) {
-        var base64Url = token.split('.')[1];
-        var base64 = base64Url.replace(/-/g, '+').replace(/_/g, '/');
-        var jsonPayload = decodeURIComponent(atob(base64).split('').map(function(c) {
-            return '%' + ('00' + c.charCodeAt(0).toString(16)).slice(-2);
-        }).join(''));
-
-        return JSON.parse(jsonPayload);
-    };
-
     function displayAddressAlert(message){
         if (message == undefined) {
             $("#addressAlerts").text("").addClass("d-none");
@@ -44,136 +33,142 @@ var addressFound = false;
         }
     }
 
-    function autocompleteAddress(){
-        var input = document.getElementById('locatorAddress');
-        var addressOptions = {
-            componentRestrictions: {
-                country: 'fr'
+    function autoCompleteAddress(){
+        $("#locatorAddress").on( "keydown", function( event ) {
+            if ( event.keyCode === $.ui.keyCode.TAB &&
+                $( this ).autocomplete( "instance" ).menu.active ) {
+              event.preventDefault();
             }
-        };
-        
-        var autocomplete = new google.maps.places.Autocomplete(input, addressOptions);
-
-        $("#locatorBtn").click(function() {
-            displayAddressAlert();
-            var text = $("#locatorAddress").text();
-            var place = autocomplete.getPlace();
-            
-            if(place != undefined){
-                var lat = place.geometry.location.lat();
-                var long = place.geometry.location.lng();
-
-                var myLatLng = {lat: lat, lng: long};
-
-                map = new google.maps.Map(document.getElementById('locatorMaps'), {
-                    zoom: 8,
-                    center: myLatLng
-                });
-
-                var marker = new google.maps.Marker({
-                    position: myLatLng,
-                    map: map,
-                    title: 'Home'
-                });
-
-                var homeAllowMvtCircle = new google.maps.Circle({
-                    strokeColor: '#FF0000',
-                    strokeOpacity: 0.7,
-                    strokeWeight: 2,
-                    fillColor: '#FF0000',
-                    fillOpacity: 0.35,
-                    map: map,
-                    center: myLatLng,
-                    radius: 100 * 1000
-                });
-                addressFound = true;
-
-                
-            } else if(text == undefined || text.trim() == ""){
-                displayAddressAlert("Use the address input bar to search your home address.");
-                addressFound = false;
-            } else {
-                displayAddressAlert("Use the autocomplete function to select valid address.");
-                addressFound = false;
-            }
-        });
-    }
-
-    function displayLocation(position){
-        if(positionCircle != undefined){
-            positionCircle.setMap(null);
-        }
-
-        positionCircle = new google.maps.Circle({
-            strokeColor: '#0000FF',
-            strokeOpacity: 1,
-            strokeWeight: 2,
-            fillColor: '#0000FF',
-            fillOpacity: 0.35,
-            map: map,
-            center: position,
-            radius: 1000
-        });
-        map.setCenter(position);
-    }
-
-    function initMySimpleLocationBtn(){
-        $("#myLocationBtn").click(function() {
-
-            if(addressFound == false){
-                displayAddressAlert("Trouvez d'abord votre adresse.");
-            }else{
-                $.getJSON("http://ip-api.com/json", function (data, status) {
-                    if(status === "success") {
-                        if(data.lat && data.lon) {
-                            //if there's not zip code but we have a latitude and longitude, let's use them
-                            var pos = {
-                                lat: data.lat,
-                                lng: data.lon
-                            };
-
-                            displayLocation(pos);
-                        } else {
-                            //if there's an error 
-                            handleLocationError(true);
-                        }
-                    } else {
-                        handleLocationError(false);
+        })
+        .autocomplete({
+            minLength: 2,
+            source: function (request, response) {
+                displayAddressAlert();
+                $.ajax({
+                    url: "https://api-adresse.data.gouv.fr/search/",
+                    data: { 
+                      q: request.term,
+                      limit: 5
+                    },
+                    dataType: "json",
+                    success: function (data) {
+                        response($.map(data.features, function (item) {
+                            return { label: item.properties.label, value: item.properties.label, coordinates: item.geometry.coordinates};
+                        }));
+                    },
+                    error: function(errorMsg){
+                        displayAddressAlert("Erreur avec le service d'adresses. Reessayez plus tard.");
+                        resetMaps();
+                        console.log(errorMsg);
                     }
                 });
+            },
+            select: function ( event, ui) {
+                displayResult(ui.item.coordinates);
             }
         });
     }
 
-    function initMyGoogleLocationBtn(){
-        $("#myLocationBtn").click(function() {
+    function hideKeyboard(element) {
+        element.attr('readonly', 'readonly'); // Force keyboard to hide on input field.
+        element.attr('disabled', 'true'); // Force keyboard to hide on textarea field.
+        setTimeout(function() {
+            element.blur();  //actually close the keyboard
+            // Remove readonly attribute after keyboard is hidden.
+            element.removeAttr('readonly');
+            element.removeAttr('disabled');
+        }, 100);
+    }
 
-            if(addressFound == false){
-                displayAddressAlert("Trouvez d'abord votre adresse.");
+    function initSearchAgain(){
+        $("#locatorBtn").click(function() {
+            displayAddressAlert();
+            var address = $("#locatorAddress").val();
+            if(address != undefined && address.length > 2){
+                $.ajax({
+                    url: "https://api-adresse.data.gouv.fr/search/",
+                    data: { 
+                      q: address,
+                      limit: 5
+                    },
+                    dataType: "json",
+                    success: function (data) {
+                        if(data.features.length > 0){
+                            displayResult(data.features[0].geometry.coordinates);
+                            $("#locatorAddress").val(data.features[0].properties.label)
+                        }else{
+                            displayAddressAlert("Erreur avec l'adresse. Utilisez le champ de recherche.");
+                            resetMaps();
+                        }
+                    },
+                    error: function(errorMsg){
+                        displayAddressAlert("Erreur avec le service d'adresses. Reessayez plus tard.");
+                        resetMaps();
+                        console.log(errorMsg);
+                    }
+                });
             }else{
-                // Try HTML5 geolocation.
-                if (navigator.geolocation) {
-                    navigator.geolocation.getCurrentPosition(function(position) {
-                        var pos = {
-                            lat: position.coords.latitude,
-                            lng: position.coords.longitude
-                        };
+                displayAddressAlert("Erreur avec l'adresse. Utilisez le champ de recherche.");
+                resetMaps();
+            }
+        });
+        $("#clearBtn").click(function() {
+            resetMaps();
+        });
+    }
 
-                        displayLocation(pos);
+    function resetMaps(){
+        $("#locatorAddress").val('');
+        if (homeMarker != undefined){
+            map.removeLayer(homeMarker);
+        }
+        if (homeCircle != undefined){
+            map.removeLayer(homeCircle);
+        }
+        if (locationMarker != undefined){
+            map.removeLayer(locationMarker);
+        }
+    }
 
-                    }, function() {
-                        handleLocationError(true);
-                    });
-                } else {
-                    // Browser doesn't support Geolocation
-                    handleLocationError(false);
-                }
+    function displayResult(coordinates){
+        hideKeyboard($("#locatorAddress"));
+        if (homeMarker != undefined){
+            map.removeLayer(homeMarker);
+        }
+        if (homeCircle != undefined){
+            map.removeLayer(homeCircle);
+        }
+        var latlng = new L.LatLng(coordinates[1], coordinates[0]);
+        homeMarker = L.marker(latlng).addTo(map).bindPopup('Mon domicile');
+        homeCircle = L.circle(latlng, 100000).addTo(map);
+        map.setView(latlng, 8);
+    }
+
+    function initMyLocationBtn(){
+        $("#myLocationBtn").click(function() {
+            displayAddressAlert();
+            // Try HTML5 geolocation.
+            if (navigator.geolocation) {
+                navigator.geolocation.getCurrentPosition(function(location) {
+                    if (locationMarker != undefined){
+                        map.removeLayer(locationMarker);
+                    }
+                    var latlng = new L.LatLng(location.coords.latitude, location.coords.longitude);
+                    locationMarker = L.marker(latlng).addTo(map).bindPopup('Ma position');
+                    map.setView(latlng, 7);
+
+                }, function() {
+                    handleLocationError(true);
+                });
+            } else {
+                // Browser doesn't support Geolocation
+                handleLocationError(false);
             }
         });
     }
+
 
     function saveBase64AsFile(base64, fileName) {
-
         var link = document.createElement("a");
         link.setAttribute("href", base64);
         link.setAttribute("download", fileName);
@@ -188,7 +183,7 @@ var addressFound = false;
                 onrendered: function( canvas ) {
                   var img = canvas.toDataURL("image/png")
 
-                  saveBase64AsFile(img, "allowed_mouvement.png");
+                  saveBase64AsFile(img, "deplacements_autorise.png");
                 }
             });
         });
@@ -196,40 +191,24 @@ var addressFound = false;
 
     function handleLocationError(browserHasGeolocation) {
         displayAddressAlert(browserHasGeolocation ?
-                              'Error: The Geolocation service failed.' :
-                              'Error: Your browser doesn\'t support geolocation.');
+                              'Erreur: La geolocalisation a echoué.' :
+                              'Error: Votre navigateur ne supporte pas la geolocalisation !');
     }
 
     // Fonction d'initialisation de la carte
     function initMap() {
-        // Créer l'objet "map" et l'insèrer dans l'élément HTML qui a l'ID "map"
-        map = new google.maps.Map(document.getElementById("locatorMaps"), {
-            // Nous plaçons le centre de la carte avec les coordonnées ci-dessus
-            center: new google.maps.LatLng(initLat, initLon), 
-            // Nous définissons le zoom par défaut
-            zoom: 11, 
-            // Nous définissons le type de carte (ici carte routière)
-            mapTypeId: google.maps.MapTypeId.ROADMAP, 
-            // Nous activons les options de contrôle de la carte (plan, satellite...)
-            mapTypeControl: false,
-            // Nous désactivons la roulette de souris
-            scrollwheel: true, 
-            mapTypeControlOptions: {
-                // Cette option sert à définir comment les options se placent
-                style: google.maps.MapTypeControlStyle.HORIZONTAL_BAR 
-            },
-            // Activation des options de navigation dans la carte (zoom...)
-            navigationControl: true, 
-            navigationControlOptions: {
-                // Comment ces options doivent-elles s'afficher
-                style: google.maps.NavigationControlStyle.ZOOM_PAN 
-            }
+        map = L.map('locatorMaps').setView([initLat, initLon], 8); // LIGNE 18
+
+        var osmLayer = L.tileLayer('http://{s}.tile.osm.org/{z}/{x}/{y}.png', { // LIGNE 20
+            attribution: '© OpenStreetMap contributors',
+            maxZoom: 19
         });
+    
+        map.addLayer(osmLayer);
     }
 
     // Register click handler for #request button
     $(function onDocReady() {
-        addressFound = false;
 
         $('#logoutBtn').click(function() {
             SudokuSolver.signOut();
@@ -245,9 +224,10 @@ var addressFound = false;
         });
 
         initMap();
-        autocompleteAddress();
-        initMySimpleLocationBtn();
+        autoCompleteAddress();
+        initMyLocationBtn();
         initSaveBtn();
+        initSearchAgain();
 
     });
 

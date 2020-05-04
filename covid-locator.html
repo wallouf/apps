@@ -5,19 +5,26 @@
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
 
-    <!-- Bootstrap CSS -->
+    <!-- CSS -->
     <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.4.1/css/bootstrap.min.css" integrity="sha384-Vkoo8x4CGsO3+Hhxv8T/Q5PaXtkKtu6ug5TOeNV6gBiFeWPGFN9MuhOf23Q9Ifjh" crossorigin="anonymous">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.6.0/leaflet.css" integrity="sha256-SHMGCYmST46SoyGgo4YR/9AlK1vf3ff84Aq9yK4hdqM=" crossorigin="anonymous" />
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/jqueryui/1.12.1/jquery-ui.min.css" integrity="sha256-rByPlHULObEjJ6XQxW/flG2r+22R5dKiAoef+aXWfik=" crossorigin="anonymous" />
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.13.0/css/all.min.css" integrity="sha256-h20CPZ0QyXlBuAw7A+KluUYx/3pK+c7lYEpqLTlxjYQ=" crossorigin="anonymous" />
+    <style type="text/css">.ui-autocomplete { z-index:2147483647; }</style>
     
+    
+    <!-- JS -->
     <script src="https://code.jquery.com/jquery-3.4.1.min.js" integrity="sha256-CSXorXvZcTkaix6Yvo6HppcZGetbYMGWSFlBw8HfCJo=" crossorigin="anonymous"></script>
     <script src="https://cdn.jsdelivr.net/npm/popper.js@1.16.0/dist/umd/popper.min.js" integrity="sha384-Q6E9RHvbIyZFJoft+2mJbHaEWldlvI9IOYy5n3zV9zzTtmI3UksdQRVvoxMfooAo" crossorigin="anonymous"></script>
     <script src="https://stackpath.bootstrapcdn.com/bootstrap/4.4.1/js/bootstrap.min.js" integrity="sha384-wfSDF2E50Y2D1uUdj0O3uMBJnjuUD4Ih7YwaYd1iqfktj0Uod8GCExl3Og8ifwB6" crossorigin="anonymous"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.13.0/js/all.min.js" integrity="sha256-KzZiKy0DWYsnwMF+X1DvQngQ2/FxF7MF3Ff72XcpuPs=" crossorigin="anonymous"></script>
 
     <script src="js/aws-cognito-sdk.min.js"></script>
     <script src="js/amazon-cognito-identity.min.js"></script>
 
-
-    <script src="https://maps.googleapis.com/maps/api/js?sensor=false&amp;libraries=places&amp;key=AIzaSyBX9FYZTFAnM3Qg1V5Ws0SOq_yE73k_zwY"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.6.0/leaflet.js" integrity="sha256-fNoRrwkP2GuYPbNSJmMJOCyfRB2DhPQe0rGTgzRsyso=" crossorigin="anonymous"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/0.4.1/html2canvas.min.js" integrity="sha256-c3RzsUWg+y2XljunEQS0LqWdQ04X1D3j22fd/8JCAKw=" crossorigin="anonymous"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jqueryui/1.12.1/jquery-ui.min.js" integrity="sha256-KM512VNnjElC30ehFwehXjx1YCHPiQkOPmqnrWtpccM=" crossorigin="anonymous"></script>
 
     <script src="js/config.js"></script>
     <script src="js/cognito-auth.js"></script>
@@ -58,29 +65,21 @@
       </nav>
     </header>
     <main role="main">
-      <a class="d-none" id="saveLocationImage" href="website.com/imageurl.png" download="ImageNameHere">click here</a>
       <div class="pt-3  text-center mt-5">
         <div class="container">
-          <h1 class="jumbotron-heading">Covid Locator</h1>
-          <p class="lead text-muted">Set your home address and view your available 100km trips !<br /><small>You can also use your actual location to view your position in the 100km range</small></p>
+          <h1 class="jumbotron-heading">Distance Covid</h1>
+          <p class="lead text-muted">Visualisez votre position et les déplacements possibles à 100 km autour de votre domicile !</p>
 
           <div class="text-left">
-            <label for="locatorAddress">Home address</label>
+            <label for="locatorAddress">Adresse du domicile</label>
           </div>
           <div class="text-left input-group mb-3">
-            <input type="text" class="form-control" id="locatorAddress" placeholder="Set your home address" aria-label="Address" aria-describedby="Address">
+            <input type="text" class="form-control" id="locatorAddress" placeholder="Inscrivez votre adresse" aria-label="Address" aria-describedby="Address">
             <div class="btn-group" role="group">
-              <button class="btn btn-primary" id="locatorBtn">View</button>
-              
-              <div class="btn-group dropleft" role="group">
-                <button class="btn btn-info dropdown-toggle" type="button" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
-                  Other
-                </button>
-                <div class="dropdown-menu" aria-labelledby="dropdownMenuButton">
-                  <button class="dropdown-item" id="myLocationBtn">My location</button>
-                  <button class="dropdown-item" id="saveLocationBtn">Save</button>
-                </div>
-              </div>
+              <button class="btn btn-primary" id="locatorBtn" data-toggle="tooltip" data-placement="top" title="Rechercher"><i class="fa fa-search"></i></button>
+              <button class="btn btn-danger" id="clearBtn" data-toggle="tooltip" data-placement="top" title="Effacer"><i class="fa fa-times"></i></button>
+              <button class="btn btn-success" id="myLocationBtn" data-toggle="tooltip" data-placement="top" title="Ma position"><i class="fa fa-map-marker"></i></button>
+              <button class="btn btn-success" id="saveLocationBtn" data-toggle="tooltip" data-placement="top" title="Enregistrer"><i class="fa fa-file"></i></button>
             </div>
           </div>
         </div>
@@ -90,6 +89,9 @@
           <div class="map-responsive">
             <div style="width:100%;height: 500px;" id="locatorMaps"></div>
           </div>
+      </div>
+      <div class="container">
+        <p class="lead text-muted"><small>Aucune de vos données ne sont sauvegardés ou utilisées.</small></p>
       </div>
     </main>
 
