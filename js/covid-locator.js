@@ -175,20 +175,6 @@ var payloadToken = {};
         link.click();
     }
 
-    function initSaveBtn() {
-        $("#saveLocationBtn").click(function() {
-            html2canvas($("#locatorMaps"), {
-                useCORS: true,
-                scale: 2,
-                onrendered: function( canvas ) {
-                  var img = canvas.toDataURL("image/png")
-
-                  saveBase64AsFile(img, "deplacements_autorise.png");
-                }
-            });
-        });
-    }
-
     function handleLocationError(browserHasGeolocation) {
         displayAddressAlert(browserHasGeolocation ?
                               'Erreur: La geolocalisation a echoué.' :
@@ -226,7 +212,7 @@ var payloadToken = {};
         initMap();
         autoCompleteAddress();
         initMyLocationBtn();
-        initSaveBtn();
+
         initSearchAgain();
 
     });
